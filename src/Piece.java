@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.awt.Point;
 import java.util.Arrays;
 
@@ -12,6 +13,8 @@ public final class Piece {
 	private int height;
 	// "next" rotation - used by nextRotation
 	private Piece next;
+	/* Color of the piece */
+	private Color color;
 	
 	/* singleton array of first rotations */
 	static private Piece[] pieces = null;
@@ -19,8 +22,9 @@ public final class Piece {
 	/**
 	 * Defines a new piece given the Points that make up its body
 	 */
-	private Piece(Point[] points) {
-		this.body = points; // watch out for problems here with "points" variable
+	private Piece(Point[] points, Color color) {
+		this.color = color;
+		this.body = points;
 		int minX = Integer.MAX_VALUE;
 		int maxX = Integer.MIN_VALUE;
 		int minY = Integer.MAX_VALUE;
@@ -113,6 +117,9 @@ public final class Piece {
 		return super.toString() + res;
 	}
 	
+	public Color getColor() {
+		return this.color;
+	}
 	
 	/**
 	 * Returns an array containing the first rotation of each of the 7 standard
@@ -123,13 +130,13 @@ public final class Piece {
 	public static Piece[] getPieces() {
 		if (pieces == null) {
 			pieces = new Piece[] {
-					setRotationCycle(new Piece(parsePoints("0 0 0 1 0 2 0 3"))), // 0, I tetronimo
-					setRotationCycle(new Piece(parsePoints("0 0 0 1 0 2 1 0"))), // 1, L tetronimo
-					setRotationCycle(new Piece(parsePoints("0 0 1 0 1 1 1 2"))), // 2, J tetronimo
-					setRotationCycle(new Piece(parsePoints("0 0 1 0 1 1 2 1"))), // 3, S tetronimo
-					setRotationCycle(new Piece(parsePoints("0 1 1 1 1 0 2 0"))), // 4, Z tetronimo
-					setRotationCycle(new Piece(parsePoints("0 0 0 1 1 0 1 1"))), // 5, O tetronimo
-					setRotationCycle(new Piece(parsePoints("0 0 1 0 1 1 2 0"))), // 6, T tetronimo
+					setRotationCycle(new Piece(parsePoints("0 0 0 1 0 2 0 3"), Color.CYAN)), // 0, I tetronimo
+					setRotationCycle(new Piece(parsePoints("0 0 0 1 0 2 1 0"), Color.ORANGE)), // 1, L tetronimo
+					setRotationCycle(new Piece(parsePoints("0 0 1 0 1 1 1 2"), Color.BLUE)), // 2, J tetronimo
+					setRotationCycle(new Piece(parsePoints("0 0 1 0 1 1 2 1"), Color.GREEN)), // 3, S tetronimo
+					setRotationCycle(new Piece(parsePoints("0 1 1 1 1 0 2 0"), Color.RED)), // 4, Z tetronimo
+					setRotationCycle(new Piece(parsePoints("0 0 0 1 1 0 1 1"), Color.YELLOW)), // 5, O tetronimo
+					setRotationCycle(new Piece(parsePoints("0 0 1 0 1 1 2 0"), new Color(153, 0, 204))), // 6, T tetronimo
 					};
 		}
 		return pieces;
@@ -161,7 +168,7 @@ public final class Piece {
 		for (int i = 0; i < newPts.length; i++) {
 			newPts[i] = new Point(p.getBody()[i].y, (p.getWidth() - 1) - p.getBody()[i].x);
 		}
-		return new Piece(newPts);
+		return new Piece(newPts, p.color);
 	}
 	
 	/**
