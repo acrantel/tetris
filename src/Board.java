@@ -31,9 +31,12 @@ public class Board {
 	public final static int PLACE_BAD = 4;
 	
 	public Board() {
-		this.grid = new Color[DEFAULT_WIDTH][DEFAULT_HEIGHT]; // default elements are null
-		this.widths = new int[DEFAULT_HEIGHT]; // default elements are 0
-		this.heights = new int[DEFAULT_WIDTH]; // default elements are 0
+		this(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+	}
+	public Board(int width, int height) {
+		this.grid = new Color[width][height];
+		this.widths = new int[height];
+		this.heights = new int[width];
 		this.committed = true;
 	}
 	
@@ -48,7 +51,7 @@ public class Board {
 	 */
 	public int place(Piece piece, int x, int y) {
 		// set up backup
-		committed = false;
+		this.committed = false;
 		bkupWidths = new int[widths.length];
 		bkupHeights = new int[heights.length];
 		bkupGrid = new Color[grid.length][grid[0].length];
@@ -70,8 +73,8 @@ public class Board {
 			} else {
 				grid[ptX][ptY] = piece.getColor();
 				widths[ptY]++;
-				if (heights[ptX] < ptY) { heights[ptX] = ptY; }
-				if (widths[ptY] == grid[0].length) { rowFilled = true; }
+				if (heights[ptX] < ptY + 1) { heights[ptX] = ptY + 1; }
+				if (widths[ptY] == grid.length) { rowFilled = true; }
 			}
 		}
 		
@@ -82,13 +85,98 @@ public class Board {
 		}
 	}
 	
-	public void clearRows() {
-		// count the number of filled rows
-		int count = 0;
-		for (int i = 0; i < widths.length; i++) {
-			if (widths[i] == grid.length) {
-				count++; // TODO
+	/**
+	 * dropHeight() computes the y value where the origin (0, 0) of a piece will come
+	 * to rest if dropped in the given column from infinitely high. This method uses
+	 * the heights array and the skirt of the piece to compute the y value quickly
+	 */
+	public int dropHeight(Piece p, int x) {
+		int originY = -1;
+		for (int i = 0; i < p.getSkirt().length; i++) {
+			if (originY < heights[i+x] - p.getSkirt()[i]) {
+				originY = heights[i+x] - p.getSkirt()[i];
 			}
 		}
+		return originY;
 	}
+	
+	/**
+	 * Clears all the full rows in grid, should be called after place() call
+	 */
+	public void clearRows() {
+		// commited should have already been set to false in place()
+		// we do not save the state of this board, because state of undo board
+		// has already been saved in the previous place() call
+		this.committed = false;
+		
+		int curTopRow = 0;
+		int totalCleared = 0;
+		for (int i = 0; i < widths.length; i++) {
+			if (widths[i] == grid.length) {
+				totalCleared++;
+				// clear this row
+				for (int c = 0; c < grid.length; c++) {
+					grid[c][curTopRow] = null;
+				}
+				widths[i] = 0;
+			} else if (widths[i] == 0) {
+				break;
+			} else {
+				// transfer this row to its new home and clear the src row (i)
+				for (int c = 0; c < grid.length; c++) {
+					grid[c][curTopRow] = grid[c][i];
+					grid[c][i] = null;
+				}
+				widths[curTopRow] = widths[i]; // transfer the width too
+				widths[i] = 0; // set the widths of the "src" row to 0
+				curTopRow++;
+			}
+		}
+		// move the heights array down by totalCleared
+		for (int k = 0; k < heights.length; k++) {
+			heights[k] = Math.max(heights[k] - totalCleared, 0); 
+		}
+	}
+	
+	@Override
+	public String toString() {
+		String res = "{";
+		for (int r = this.grid[0].length - 1; r >= 0; r--) {
+			res += "{";
+			for (int c = 0; c < grid.length; c++) {
+				if (grid[c][r] == null) {
+					res += "-, ";
+				} else {
+					res += "X, "; 
+				}//grid[c][r] + ", ";
+			}
+			res += "}\n";
+		}
+		return res;
+	}
+	
+	// UNDO FUNCTIONALITY
+	/**
+	 * Undos the most recent place() or place()/clearRows() operation if 
+	 * the board hasn't been committed yet, basically returning the board 
+	 * to its original state. Once commit has been called, it is not possible
+	 * to go back to the original state.
+	 */
+	public void undo() {
+		if (!committed) {
+			// reset the grid
+			this.grid = this.bkupGrid;
+			this.heights = this.bkupHeights;
+			this.widths = this.bkupWidths;
+		}
+	}
+	
+	/**
+	 * Commits the board state, so that it is no longer possible to go back to the 
+	 * original state.
+	 */
+	public void commit() {
+		this.committed = true;
+	}
+
 }
