@@ -41,6 +41,14 @@ public class Board {
 	}
 	
 	/**
+	 * returns the block at (x, y)
+	 */
+	public Color at(int x, int y) {
+		return this.grid[x][y];
+	}
+	
+	
+	/**
 	 * Takes a piece, x, and y and places the piece in the board with its lower
 	 * left corner at x, y. Use undo() to undo the most recent placement.
 	 * @return PLACE_OK for a successful placement, PLACE_ROW_FILLED for a
@@ -102,11 +110,13 @@ public class Board {
 	
 	/**
 	 * Clears all the full rows in grid, should be called after place() call
+	 * @return true if any rows were cleared, false if no rows were cleared.
 	 */
-	public void clearRows() {
+	public boolean clearRows() {
 		// commited should have already been set to false in place()
 		// we do not save the state of this board, because state of undo board
 		// has already been saved in the previous place() call
+
 		this.committed = false;
 		
 		int curTopRow = 0;
@@ -124,11 +134,13 @@ public class Board {
 			} else {
 				// transfer this row to its new home and clear the src row (i)
 				for (int c = 0; c < grid.length; c++) {
-					grid[c][curTopRow] = grid[c][i];
+					Color temp = grid[c][i];
 					grid[c][i] = null;
+					grid[c][curTopRow] = temp;
 				}
-				widths[curTopRow] = widths[i]; // transfer the width too
-				widths[i] = 0; // set the widths of the "src" row to 0
+				int temp = widths[i]; // transfer the width
+				widths[i] = 0;
+				widths[curTopRow] = temp;
 				curTopRow++;
 			}
 		}
@@ -136,6 +148,52 @@ public class Board {
 		for (int k = 0; k < heights.length; k++) {
 			heights[k] = Math.max(heights[k] - totalCleared, 0); 
 		}
+		return totalCleared > 0;
+	}
+	
+	/**
+	 * @return the current maximum height of the board, as given by the heights array
+	 */
+	public int getMaxHeight() {
+		int curMax = 0;
+		for (int i = 0; i < heights.length; i++) {
+			if (heights[i] > curMax) {
+				curMax = heights[i];
+			}
+		}
+		return curMax;
+	}
+	
+	/**
+	 * @param x the column to get the height of 
+	 * @return returns the height of column x
+	 */
+	public int getColumnHeight(int x) {
+		return heights[x];
+	}
+	
+	/**
+	 * @param y the row to get the width of
+	 * @return the width of row y
+	 */
+	public int getRowWidth(int y) {
+		return widths[y];
+	}
+	
+	/**
+	 * @param x the x value of the point to check
+	 * @param y the y value of the point to check
+	 * @return the color at grid[x][y], or null if there is no block there
+	 */
+	public Color getGrid(int x, int y) {
+		return grid[x][y];
+	}
+	
+	public int getWidth() {
+		return grid.length;
+	}
+	public int getHeight() {
+		return grid[0].length;
 	}
 	
 	@Override
@@ -176,7 +234,14 @@ public class Board {
 	 * original state.
 	 */
 	public void commit() {
+		this.bkupGrid = grid;
+		this.bkupHeights = heights;
+		this.bkupWidths = widths;
 		this.committed = true;
+	}
+	
+	public boolean isCommited() {
+		return committed;
 	}
 
 }
