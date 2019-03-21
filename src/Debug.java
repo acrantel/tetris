@@ -1,4 +1,4 @@
-
+/* Copyright 2019, Serena Li, All rights reserved. */
 public class Debug {
 	public static void main(String[] args) {
 		Board b = new Board();

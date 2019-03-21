@@ -1,3 +1,4 @@
+/* Copyright 2019, Serena Li, All rights reserved. */
 import java.awt.Color;
 import java.awt.Point;
 

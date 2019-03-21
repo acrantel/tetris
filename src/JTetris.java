@@ -1,3 +1,4 @@
+/* Copyright 2019, Serena Li, All rights reserved. */
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -33,7 +34,7 @@ public class JTetris extends JComponent {
 	/* If we should display the board */
 	private boolean displayBoard;
 	/* Random generator for the pieces */
-	private Random random;
+	private Randp<Piece> random;
 	
 	/* Timer for moving the piece down */
 	private Timer moveDownTimer;
@@ -96,7 +97,7 @@ public class JTetris extends JComponent {
 		displayBoard = true;
 		this.board = new Board(BOARD_WIDTH, BOARD_HEIGHT + TOP_SPACE);
 		this.pieces = Piece.getPieces();
-		this.random = new Random();
+		this.random = new Randp<Piece>(pieces);
 		// set up key bindings
 		this.getInputMap().put(KeyStroke.getKeyStroke("UP"), ROTATE);
 		this.getInputMap().put(KeyStroke.getKeyStroke("RIGHT"), RIGHT);
@@ -111,9 +112,9 @@ public class JTetris extends JComponent {
 		this.getActionMap().put(DROP, new MoveAction(DROP));
 		this.addNewPiece();
 		// set up the timer
-//		ActionListener dropPiece = new DropPieceListener(this);
-//		this.moveDownTimer = new Timer(delay, dropPiece);
-//		moveDownTimer.start();
+		ActionListener dropPiece = new DropPieceListener(this);
+		this.moveDownTimer = new Timer(delay, dropPiece);
+		moveDownTimer.start();
 	}
 	
 	/**
@@ -143,7 +144,7 @@ public class JTetris extends JComponent {
 	 * @return The next piece to put on the board.
 	 */
 	public Piece pickNextPiece() {
-		return pieces[random.nextInt(pieces.length)];
+		return random.next();
 	}
 	
 	/**
@@ -156,7 +157,7 @@ public class JTetris extends JComponent {
 				return Board.PLACE_BAD;
 			}
 			Piece nextPiece = pickNextPiece();
-			int result = setCurrent(pickNextPiece(), (BOARD_WIDTH-nextPiece.getWidth())/2, BOARD_HEIGHT);
+			int result = setCurrent(nextPiece, (BOARD_WIDTH-nextPiece.getWidth())/2, BOARD_HEIGHT);
 			repaint();
 			return result;
 		} else {
@@ -281,6 +282,7 @@ public class JTetris extends JComponent {
 		JTetris tComp = new JTetris();
 		frame.add(tComp);
 		frame.setVisible(true);
+		tComp.grabFocus();
 		tComp.startGame();
 	}
 }
